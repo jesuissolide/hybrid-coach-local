@@ -89,23 +89,36 @@ export default function CoachPage() {
   const [text, setText] = useState("");
   const [logs, setLogs] = useState<LogEntry[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isOffline, setIsOffline] = useState(false);
 
-  // Charger l'historique depuis le backend au démarrage
+  // Charger l'historique depuis Render au démarrage, localStorage = cache de secours
   useEffect(() => {
-    async function fetchLogs() {
+    async function syncWithRender() {
       try {
         const res = await fetch(`${API_BASE}/api/logs`);
-        if (res.ok) {
-          const data = await res.json();
-          setLogs(data);
-        }
+        if (!res.ok) throw new Error("sync failed");
+
+        const data = await res.json();
+        setLogs(data);
+        localStorage.setItem("hybrid-coach-logs", JSON.stringify(data));
+        setIsOffline(false);
       } catch (err) {
         console.error("Erreur chargement historique:", err);
+        const cached = localStorage.getItem("hybrid-coach-logs");
+        if (cached) {
+          try {
+            setLogs(JSON.parse(cached));
+          } catch {
+            setLogs([]);
+          }
+        }
+        setIsOffline(true);
       } finally {
         setLoading(false);
       }
     }
-    fetchLogs();
+
+    syncWithRender();
   }, []);
 
   const saveLog = async () => {
@@ -147,6 +160,8 @@ export default function CoachPage() {
       const refreshRes = await fetch(`${API_BASE}/api/logs`);
       const refreshedLogs = await refreshRes.json();
       setLogs(refreshedLogs);
+      localStorage.setItem("hybrid-coach-logs", JSON.stringify(refreshedLogs));
+      setIsOffline(false);
       setText("");
       alert("✅ Journée digérée + séance de demain préparée");
     } catch (error) {
@@ -162,6 +177,8 @@ export default function CoachPage() {
       const refreshRes = await fetch(`${API_BASE}/api/logs`);
       const refreshedLogs = await refreshRes.json();
       setLogs(refreshedLogs);
+      localStorage.setItem("hybrid-coach-logs", JSON.stringify(refreshedLogs));
+      setIsOffline(false);
     } catch (err) {
       console.error("Erreur suppression:", err);
     }
@@ -179,6 +196,11 @@ export default function CoachPage() {
     <div className="min-h-screen bg-slate-950 text-white p-8">
       <div className="max-w-3xl mx-auto space-y-6">
         <h1 className="text-4xl font-bold">🧠 Coach quotidien</h1>
+        {isOffline && (
+          <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-300">
+            ⚠️ Mode hors ligne : affichage du dernier cache local
+          </div>
+        )}
 
         <textarea
           value={text}
