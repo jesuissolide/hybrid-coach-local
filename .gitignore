@@ -1,0 +1,30 @@
+# --- SECURITE ---
+.env
+.env.local
+.env.*.local
+*.pem
+*.key
+auth.json
+
+# --- RAPPORTS IA (REPOMIX) ---
+code_audit.md
+code_audit_logic.md
+updates_2h.md
+repomix-output.*
+
+# --- DEPENDANCES & BUILD ---
+node_modules/
+dist/
+build/
+.cache/
+
+# --- FICHIERS SYSTEME MAC ---
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon?
+
+# --- CONFIGS IDE ---
+.vscode/
+.idea/
+*.swp
